@@ -105,7 +105,7 @@
       const container = document.getElementById("forecast");
       container.innerHTML = "";
 
-      const labels = [], tempMin = [], tempMax = [], rain = [], sunshine = [];
+      const labels = [], tempMin = [], tempMax = [], rain = [], sunshine = [], showers = [];
 
       for (let i = 0; i < data.daily.time.length; i++) {
         const dateStr = data.daily.time[i];
@@ -133,6 +133,7 @@
         tempMax.push(data.daily.temperature_2m_max[i]);
         rain.push(data.daily.precipitation_sum[i]);
         sunshine.push((data.daily.sunshine_duration[i] / 3600).toFixed(1));
+        showers.push(data.daily.showers_sum[i]);
         
       }
 
@@ -213,24 +214,52 @@
               data: sunshine,
               backgroundColor: 'gold',
               borderColor: 'orange',
-              borderWidth: 1
+              borderWidth: 1,
+              yAxisID: 'y',
+              type: 'bar'
+            },
+            {
+              label: 'Shower (l/m²)',
+              data: showers,
+              backgroundColor: 'rgba(0, 200, 255, 0.5)',
+              borderColor: 'deepskyblue',
+              borderWidth: 1,
+              yAxisID: 'y1',
+              type: 'bar'
             }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          stacked: false,
           scales: {
             y: {
               beginAtZero: true,
+              position: 'left',
               title: {
                 display: true,
                 text: 'Stunden'
               }
+            },
+            y1: {
+              beginAtZero: true,
+              position: 'right',
+              title: {
+                display: true,
+                text: 'Shower (l/m²)'
+              },
+              grid: {
+                drawOnChartArea: false
+              }
             }
           }
         }
-      });      
+      });     
     }
 
  
