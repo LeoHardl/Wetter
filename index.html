@@ -195,70 +195,7 @@
       });
     }
 
-      const ctxx = document.getElementById('weatherChart2').getContext('2d');
-      if (chartInstance) chartInstance.destroy();
-
-      chartInstance = new Chart(ctxx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              type: 'line',
-              label: 'Temp Max (°C)',
-              data: tempMax,
-              borderColor: 'red',
-              backgroundColor: 'transparent',
-              yAxisID: 'y',
-            },
-            {
-              type: 'line',
-              label: 'Temp Min (°C)',
-              data: tempMin,
-              borderColor: 'blue',
-              backgroundColor: 'transparent',
-              yAxisID: 'y',
-            },
-            {
-              type: 'bar',
-              label: 'Regen (l/m²)',
-              data: rain,
-              backgroundColor: 'rgba(0, 150, 255, 0.4)',
-              yAxisID: 'y1',
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: {
-            mode: 'index',
-            intersect: false
-          },
-          stacked: false,
-          scales: {
-            y: {
-              type: 'linear',
-              position: 'left',
-              title: {
-                display: true,
-                text: 'Temperatur (°C)'
-              }
-            },
-            y1: {
-              type: 'linear',
-              position: 'right',
-              title: {
-                display: true,
-                text: 'Regen (l/m²)'
-              },
-              grid: {
-                drawOnChartArea: false
-              }
-            }
-          }
-        }
-      });
+ 
     
 
     fetchWeather(16);
