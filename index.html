@@ -198,10 +198,10 @@
       });
     }
 
-      const ctx = document.getElementById('weatherChart2').getContext('2d');
+      const ctxx = document.getElementById('weatherChart2').getContext('2d');
       if (chartInstance) chartInstance.destroy();
 
-      chartInstance = new Chart(ctx, {
+      chartInstance = new Chart(ctxx, {
         type: 'bar',
         data: {
           labels: labels,
