@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wettervorhersage – Vorschau wählbar</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 1em;
+      background: #f4f4f4;
+    }
+
+    h1, h2 {
+      text-align: center;
+    }
+
+    #forecastLength {
+      font-size: 1em;
+      margin: 0.5em;
+    }
+
+    #forecast {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1em;
+    }
+
+    .day-card {
+      background: white;
+      border-radius: 8px;
+      padding: 1em;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 180px;
+      font-size: 0.9em;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+    }
+
+    @media (min-width: 600px) {
+      .day-card {
+        width: 45%;
+      }
+    }
+
+    @media (min-width: 900px) {
+      .day-card {
+        width: 200px;
+      }
+    }
+
+    .chart-container {
+      max-width: 95%;
+      margin: 2em auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Wetter für Kreuth, 46.641017, 11.744246</h1>
+
+  <div style="text-align: center;">
+    <label for="forecastLength">Vorschau: </label>
+    <select id="forecastLength">
+      <option value="7">7 Tage</option>
+      <option value="16" selected>16 Tage</option>
+    </select>
+  </div>
+
+  <div id="forecast"></div>
+
+  <h2>Temperatur & Regen</h2>
+  <div class="chart-container">
+    <canvas id="weatherChart"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    function getWeekday(dateStr) {
+      const days = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+      const date = new Date(dateStr);
+      return days[date.getDay()];
+    }
+
+    let chartInstance = null;
+
+    async function fetchWeather(forecastDays = 16) {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=46.641017&longitude=11.744246&daily=snowfall_sum,temperature_2m_max,temperature_2m_min,precipitation_sum,showers_sum,shortwave_radiation_sum,sunshine_duration,relative_humidity_2m_max,relative_humidity_2m_min&timezone=auto&forecast_days=${forecastDays}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      const container = document.getElementById("forecast");
+      container.innerHTML = "";
+
+      const labels = [], tempMin = [], tempMax = [], rain = [];
+
+      for (let i = 0; i < data.daily.time.length; i++) {
+        const dateStr = data.daily.time[i];
+        const weekday = getWeekday(dateStr);
+        const radiation_MJ = data.daily.shortwave_radiation_sum[i];
+        const radiation_Wm2 = (radiation_MJ /3.6).toFixed(0);
+        const sunshine_min = data.daily.sunshine_duration[i];
+        const sunshine_h = (sunshine_min / 3600).toFixed(1);
+
+        container.innerHTML += `
+          <div class="day-card">
+            <strong>${weekday}<br>${dateStr}</strong><br>
+            🌡️ ${data.daily.temperature_2m_min[i]}°C – ${data.daily.temperature_2m_max[i]}°C<br>
+            💧 ${data.daily.relative_humidity_2m_min[i]}% – ${data.daily.relative_humidity_2m_max[i]}%<br>
+            ☀️ ${radiation_Wm2} kWh/m²<br>
+            ☀️ ${sunshine_h} h Sonne<br>
+            🌧️ ${data.daily.precipitation_sum[i]} l/m²<br>
+            🚿 ${data.daily.showers_sum[i]} l/m²<br>
+            ❄️ ${data.daily.snowfall_sum[i]} cm
+          </div>
+        `;
+
+        labels.push(weekday);
+        tempMin.push(data.daily.temperature_2m_min[i]);
+        tempMax.push(data.daily.temperature_2m_max[i]);
+        rain.push(data.daily.precipitation_sum[i]);
+      }
+
+      const ctx = document.getElementById('weatherChart').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              type: 'line',
+              label: 'Temp Max (°C)',
+              data: tempMax,
+              borderColor: 'red',
+              backgroundColor: 'transparent',
+              yAxisID: 'y',
+            },
+            {
+              type: 'line',
+              label: 'Temp Min (°C)',
+              data: tempMin,
+              borderColor: 'blue',
+              backgroundColor: 'transparent',
+              yAxisID: 'y',
+            },
+            {
+              type: 'bar',
+              label: 'Regen (l/m²)',
+              data: rain,
+              backgroundColor: 'rgba(0, 150, 255, 0.4)',
+              yAxisID: 'y1',
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          stacked: false,
+          scales: {
+            y: {
+              type: 'linear',
+              position: 'left',
+              title: {
+                display: true,
+                text: 'Temperatur (°C)'
+              }
+            },
+            y1: {
+              type: 'linear',
+              position: 'right',
+              title: {
+                display: true,
+                text: 'Regen (l/m²)'
+              },
+              grid: {
+                drawOnChartArea: false
+              }
+            }
+          }
+        }
+      });
+    }
+
+    fetchWeather(16);
+
+    document.getElementById("forecastLength").addEventListener("change", (e) => {
+      fetchWeather(parseInt(e.target.value));
+    });
+  </script>
+</body>
+</html>
