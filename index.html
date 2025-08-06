@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Wettervorhersage - PWA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#007AFF">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 1em; }
+    .forecast-row { display: flex; flex-wrap: wrap; gap: 1em; }
+    .day-box { flex: 1 1 calc(100% / 7 - 1em); border: 1px solid #ccc; padding: 0.5em; border-radius: 5px; background: #f9f9f9; min-width: 120px; }
+    canvas { max-width: 100%; height: auto; }
+    button { margin: 0.5em 0.5em 1em 0; padding: 0.5em 1em; }
+  </style>
+</head>
+<body>
+  <h1>Wettervorhersage</h1>
+  <div>
+    <button onclick="setForecastDays(7)">7 Tage</button>
+    <button onclick="setForecastDays(16)">16 Tage</button>
+  </div>
+  <div id="forecast" class="forecast-row"></div>
+  <canvas id="weatherChart"></canvas>
+
+  <script>
+    let forecastDays = 7;
+    let defaultLat = 46.641017;
+    let defaultLon = 11.744246;
+
+    function getWeekday(dateStr) {
+      const days = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+      return days[new Date(dateStr).getDay()];
+    }
+
+    function setForecastDays(days) {
+      forecastDays = days;
+      fetchWeather();
+    }
+
+    async function fetchWeather() {
+      const container = document.getElementById("forecast");
+      container.innerHTML = "Lade Wetterdaten...";
+
+      let lat = defaultLat;
+      let lon = defaultLon;
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            lat = pos.coords.latitude;
+            lon = pos.coords.longitude;
+            loadWeather(lat, lon);
+          },
+          () => loadWeather(lat, lon) // fallback to default
+        );
+      } else {
+        loadWeather(lat, lon);
+      }
+    }
+
+    async function loadWeather(lat, lon) {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=snowfall_sum,temperature_2m_max,temperature_2m_min,precipitation_sum,showers_sum,shortwave_radiation_sum,sunshine_duration,relative_humidity_2m_max,relative_humidity_2m_min&timezone=auto&forecast_days=${forecastDays}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      const container = document.getElementById("forecast");
+      container.innerHTML = "";
+      const days = data.daily.time.length;
+
+      let tempLabels = [], tempMax = [], rain = [], showers = [];
+
+      for (let i = 0; i < days; i++) {
+        const dateStr = data.daily.time[i];
+        const weekday = getWeekday(dateStr);
+        const radiation_MJ = data.daily.shortwave_radiation_sum[i];
+        const radiation_kWh = (radiation_MJ / 3.6).toFixed(0);
+        const sunshine_h = (data.daily.sunshine_duration[i] / 3600).toFixed(0);
+
+        const html = `
+          <div class="day-box">
+            <strong>${weekday}, ${dateStr}</strong><br>
+            🌡️ ${data.daily.temperature_2m_min[i]}°C - ${data.daily.temperature_2m_max[i]}°C<br>
+            💧 ${data.daily.relative_humidity_2m_min[i]}% - ${data.daily.relative_humidity_2m_max[i]}%<br>
+            ☀️ ${radiation_kWh} kWh/m²<br>
+            ☀️ ${sunshine_h} Std Sonne<br>
+            🌧️ Regen: ${data.daily.precipitation_sum[i]} l/m²<br>
+            🚿 Schauer: ${data.daily.showers_sum[i]} l/m²<br>
+            ❄️ Schnee: ${data.daily.snowfall_sum[i]} cm
+          </div>
+        `;
+        container.innerHTML += html;
+
+        tempLabels.push(weekday);
+        tempMax.push(data.daily.temperature_2m_max[i]);
+        rain.push(data.daily.precipitation_sum[i]);
+        showers.push(data.daily.showers_sum[i]);
+      }
+
+      renderChart(tempLabels, tempMax, rain, showers);
+    }
+
+    function renderChart(labels, temps, rain, showers) {
+      const ctx = document.getElementById("weatherChart").getContext("2d");
+      if (window.weatherChart) window.weatherChart.destroy();
+
+      window.weatherChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: '🌧️ Regen (l/m²)',
+              data: rain,
+              backgroundColor: 'rgba(54, 162, 235, 0.5)',
+              yAxisID: 'y'
+            },
+            {
+              label: '🚿 Schauer (l/m²)',
+              data: showers,
+              backgroundColor: 'rgba(153, 102, 255, 0.5)',
+              yAxisID: 'y'
+            },
+            {
+              label: '🌡️ Temp (°C)',
+              data: temps,
+              type: 'line',
+              borderColor: 'red',
+              backgroundColor: 'red',
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true, position: 'left', title: { display: true, text: 'Niederschlag (l/m²)' }},
+            y1: { beginAtZero: false, position: 'right', title: { display: true, text: 'Temperatur (°C)' }, grid: { drawOnChartArea: false }}
+          }
+        }
+      });
+    }
+
+    fetchWeather();
+  </script>
+</body>
+</html>
