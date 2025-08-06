@@ -124,6 +124,7 @@
         tempMin.push(data.daily.temperature_2m_min[i]);
         tempMax.push(data.daily.temperature_2m_max[i]);
         rain.push(data.daily.precipitation_sum[i]);
+        sun.push(sunshine_h);
       }
 
       const ctx = document.getElementById('weatherChart').getContext('2d');
@@ -156,6 +157,13 @@
               data: rain,
               backgroundColor: 'rgba(0, 150, 255, 0.4)',
               yAxisID: 'y1',
+            },
+            {
+              type: 'bar',
+              label: 'Sonne (h)',
+              data: sun,
+              backgroundColor: 'rgba(0, 170, 255, 0.4)',
+              yAxisID: 'y2',
             }
           ]
         },
@@ -182,6 +190,17 @@
               title: {
                 display: true,
                 text: 'Regen (l/m²)'
+              },
+              grid: {
+                drawOnChartArea: false
+              }
+            },
+            y2: {
+              type: 'linear',
+              position: 'right',
+              title: {
+                display: true,
+                text: 'Sunshine (h)'
               },
               grid: {
                 drawOnChartArea: false
