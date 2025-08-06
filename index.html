@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
   <link rel="icon" href="icons/icon-192.png">
-  <script src="js/chart.min.js"></script>
+  
   
   <style>
     body { font-family: sans-serif; padding: 1em; }
@@ -26,6 +26,7 @@
   </div>
   <div id="forecast" class="forecast-row"></div>
   <canvas id="weatherChart"></canvas>
+  <script src="js/chart.min.js"></script>
   
 
   <script>
@@ -53,8 +54,7 @@
   
     async function loadWeather(lat, lon) {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=snowfall_sum,temperature_2m_max,temperature_2m_min,precipitation_sum,showers_sum,shortwave_radiation_sum,sunshine_duration,relative_humidity_2m_max,relative_humidity_2m_min&timezone=auto&forecast_days=${forecastDays}`;
-      
- 
+
       
       const response = await fetch(url);
       const data = await response.json();
@@ -137,6 +137,7 @@
     }
 
     fetchWeather();
+    }
   </script>
 </body>
 </html>
