@@ -19,7 +19,7 @@
   </style>
 </head>
 <body>
-  <h1>Wettervorhersage</h1>
+  <h1>Wettervorhersage Kreuth</h1>
   <div>
     <button onclick="setForecastDays(7)">7 Tage</button>
     <button onclick="setForecastDays(16)">16 Tage</button>
@@ -49,33 +49,12 @@
 
       let lat = defaultLat;
       let lon = defaultLon;
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          pos => {
-            lat = pos.coords.latitude;
-            lon = pos.coords.longitude;
-            loadWeather(lat, lon);
-          },
-          () => loadWeather(lat, lon) // fallback to default
-        );
-      } else {
-        loadWeather(lat, lon);
-      }
-    }
-
+      loadWeather(lat, lon);
+  
     async function loadWeather(lat, lon) {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=snowfall_sum,temperature_2m_max,temperature_2m_min,precipitation_sum,showers_sum,shortwave_radiation_sum,sunshine_duration,relative_humidity_2m_max,relative_humidity_2m_min&timezone=auto&forecast_days=${forecastDays}`;
       
-      async function getLocationName(lat, lon) {        
-        try {
-          const res = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}`);
-          const data = await res.json();
-          return data?.results?.[0]?.name || `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
-        } catch (e) {
-          return `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
-        }
-      }
+ 
       
       const response = await fetch(url);
       const data = await response.json();
