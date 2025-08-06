@@ -78,6 +78,11 @@
     <canvas id="weatherChart"></canvas>
   </div>
 
+  <h2>Temperatur & Regen2</h2>
+  <div class="chart-container">
+    <canvas id="weatherChart2"></canvas>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
@@ -192,6 +197,72 @@
         }
       });
     }
+
+      const ctx = document.getElementById('weatherChart2').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              type: 'line',
+              label: 'Temp Max (°C)',
+              data: tempMax,
+              borderColor: 'red',
+              backgroundColor: 'transparent',
+              yAxisID: 'y',
+            },
+            {
+              type: 'line',
+              label: 'Temp Min (°C)',
+              data: tempMin,
+              borderColor: 'blue',
+              backgroundColor: 'transparent',
+              yAxisID: 'y',
+            },
+            {
+              type: 'bar',
+              label: 'Regen (l/m²)',
+              data: rain,
+              backgroundColor: 'rgba(0, 150, 255, 0.4)',
+              yAxisID: 'y1',
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          stacked: false,
+          scales: {
+            y: {
+              type: 'linear',
+              position: 'left',
+              title: {
+                display: true,
+                text: 'Temperatur (°C)'
+              }
+            },
+            y1: {
+              type: 'linear',
+              position: 'right',
+              title: {
+                display: true,
+                text: 'Regen (l/m²)'
+              },
+              grid: {
+                drawOnChartArea: false
+              }
+            }
+          }
+        }
+      });
+    
 
     fetchWeather(16);
 
