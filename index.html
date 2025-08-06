@@ -78,6 +78,11 @@
     <canvas id="weatherChart"></canvas>
   </div>
 
+    <h2>Sonnenscheindauer & Shower</h2>
+  <div class="chart-container">
+    <canvas id="weatherChart2"></canvas>
+  </div>
+
 
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -90,6 +95,7 @@
     }
 
     let chartInstance = null;
+    let chartInstance2 = null;
 
     async function fetchWeather(forecastDays = 16) {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=46.641017&longitude=11.744246&daily=snowfall_sum,temperature_2m_max,temperature_2m_min,precipitation_sum,showers_sum,shortwave_radiation_sum,sunshine_duration,relative_humidity_2m_max,relative_humidity_2m_min&timezone=auto&forecast_days=${forecastDays}`;
@@ -99,7 +105,7 @@
       const container = document.getElementById("forecast");
       container.innerHTML = "";
 
-      const labels = [], tempMin = [], tempMax = [], rain = [];
+      const labels = [], tempMin = [], tempMax = [], rain = [], sunshine = [];
 
       for (let i = 0; i < data.daily.time.length; i++) {
         const dateStr = data.daily.time[i];
@@ -126,6 +132,7 @@
         tempMin.push(data.daily.temperature_2m_min[i]);
         tempMax.push(data.daily.temperature_2m_max[i]);
         rain.push(data.daily.precipitation_sum[i]);
+        sunshine.push((data.daily.sunshine_duration[i] / 3600).toFixed(1));
         
       }
 
@@ -193,6 +200,37 @@
           }
         }
       });
+
+      const ctx2 = document.getElementById('weatherChart2').getContext('2d');
+      if (chartInstance2) chartInstance2.destroy();
+      chartInstance2 = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Sonnenscheindauer (h)',
+              data: sunshine,
+              backgroundColor: 'gold',
+              borderColor: 'orange',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Stunden'
+              }
+            }
+          }
+        }
+      });      
     }
 
  
